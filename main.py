@@ -117,12 +117,12 @@ def main(nic, port, interval):
         # text = f'{d}'
         # lines.append(box[4] + text + ' '*(cols-2-len(text)) + box[4])
 
-        text = f'{YELLOW}{"Interface":<32}{CC} │ {RED}{"RX bps":<10} {"pps":>10}{CC} │ {GREEN}{"TX bps":<10} {"pps":>10}{CC}'
+        text = f'{YELLOW}{"Interface":<28}{CC} │ {RED}{"RX bps":<10} {"pps":>10}{CC} │ {GREEN}{"TX bps":<10} {"pps":>10}{CC}'
         lines.append(box[4] + text + ' '*(cols-2-slen(text)) + box[4])
-        text = f'{YELLOW}{nic:<32}{CC} │ {RED}{sizeof_fmt(d["port_rcv_data"]):>10} {unit_fmt(d["port_rcv_packets"]):>10}{CC} │ {GREEN}{sizeof_fmt(d["port_xmit_data"]):>10} {unit_fmt(d["port_xmit_packets"]):>10}{CC}'
+        text = f'{YELLOW}{nic:<28}{CC} │ {RED}{sizeof_fmt(d["port_rcv_data"]):>10} {unit_fmt(d["port_rcv_packets"]):>10}{CC} │ {GREEN}{sizeof_fmt(d["port_xmit_data"]):>10} {unit_fmt(d["port_xmit_packets"]):>10}{CC}'
         lines.append(box[4] + text + ' '*(cols-2-slen(text)) + box[4])
 
-        text = f'{"─"*33}┴{"─"*23}┴{"─"*23}'
+        text = f'{"─"*29}┴{"─"*23}┴{"─"*23}'
         lines.append(box[4] + text + '─'*(cols-2-len(text)) + box[4])
 
         queue.append(d)
