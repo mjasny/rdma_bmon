@@ -9,6 +9,7 @@ import atexit
 import math
 import re
 import argparse
+import csv
 
 
 class CounterReader:
@@ -67,7 +68,7 @@ class Diff:
         return diff
 
 
-def main(nic, port, interval):
+def main(nic, port, interval, csv_file):
     HW_COUNTERS = '/sys/class/infiniband/{nic}/ports/{port}/hw_counters/'
     PORT_COUNTERS = '/sys/class/infiniband/{nic}/ports/{port}/counters/'
 
@@ -106,10 +107,19 @@ def main(nic, port, interval):
     def slen(s):
         return len(ansi_escape.sub('', s))
 
+    csv_writer = None
+    if csv_file is not None:
+        f = open(csv_file, 'w')
+        csv_writer = csv.DictWriter(f, diff._fields)
+        csv_writer.writeheader()
+
     for vals in counters.periodic(seconds=interval):
         vals = {k: v*4 if k.endswith('_data') else v for k, v in vals.items()}
         vals = {k: v * (1/interval) for k, v in vals.items()}
         d = diff.feed(vals)
+
+        if csv_file:
+            csv_writer.writerow(d)
 
         lines = []
         lines.append(box[0] + box[5]*(cols-2) + box[1])
@@ -207,5 +217,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', type=float, default=1, help='NIC port')
     parser.add_argument('-r', '--rate', type=float, default=0.25,
                         dest='interval', help='Refresh rate in seconds')
+    parser.add_argument('--csv', dest='csv_file', type=str,
+                        help='Export to CSV file')
     args = parser.parse_args()
     main(**vars(args))
