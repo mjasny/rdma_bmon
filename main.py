@@ -68,7 +68,7 @@ class Diff:
         return diff
 
 
-def main(nic, port, interval, csv_file):
+def main(nic, port, interval, csv_file, no_gui):
     HW_COUNTERS = '/sys/class/infiniband/{nic}/ports/{port}/hw_counters/'
     PORT_COUNTERS = '/sys/class/infiniband/{nic}/ports/{port}/counters/'
 
@@ -81,17 +81,18 @@ def main(nic, port, interval, csv_file):
     block = [' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']
 
     cols, rows = os.get_terminal_size()
-
-    sys.stdout.write('\033[?25l')  # hide cursor
-    sys.stdout.flush()
+    if not no_gui:
+        sys.stdout.write('\033[?25l')  # hide cursor
+        sys.stdout.flush()
 
     @atexit.register
     def cleanup():
         sys.stdout.write('\033[?25h')  # show cursor
         sys.stdout.flush()
 
-    sys.stdout.write('\033[2J')  # clear and move to 0 0
-    sys.stdout.flush()
+    if not no_gui:
+        sys.stdout.write('\033[2J')  # clear and move to 0 0
+        sys.stdout.flush()
 
     diff = Diff('port_rcv_data', 'port_xmit_data',
                 'port_rcv_packets', 'port_xmit_packets')
@@ -120,7 +121,8 @@ def main(nic, port, interval, csv_file):
 
         if csv_file:
             csv_writer.writerow(d)
-
+        if no_gui:
+            continue
         lines = []
         lines.append(box[0] + box[5]*(cols-2) + box[1])
 
@@ -219,5 +221,6 @@ if __name__ == '__main__':
                         dest='interval', help='Refresh rate in seconds')
     parser.add_argument('--csv', dest='csv_file', type=str,
                         help='Export to CSV file')
+    parser.add_argument('--no_gui', action='store_true', default=False, help='Disables GUI live output')
     args = parser.parse_args()
     main(**vars(args))
