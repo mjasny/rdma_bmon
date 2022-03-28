@@ -63,6 +63,7 @@ class Diff:
         self._d = {}
 
     def feed(self, vals):
+        vals['unix_time'] = 0 #gets overwritten after diff
         diff = {k: vals[k] - self._d.get(k, vals[k]) for k in self._fields}
         self._d = {k: vals[k] for k in self._fields}
         return diff
@@ -94,7 +95,7 @@ def main(nic, port, interval, csv_file, no_gui):
         sys.stdout.write('\033[2J')  # clear and move to 0 0
         sys.stdout.flush()
 
-    diff = Diff('port_rcv_data', 'port_xmit_data',
+    diff = Diff('unix_time','port_rcv_data', 'port_xmit_data',
                 'port_rcv_packets', 'port_xmit_packets')
     queue = deque(maxlen=cols//2-1)
 
@@ -117,10 +118,12 @@ def main(nic, port, interval, csv_file, no_gui):
     for vals in counters.periodic(seconds=interval):
         vals = {k: v*4 if k.endswith('_data') else v for k, v in vals.items()}
         vals = {k: v * (1/interval) for k, v in vals.items()}
-        d = diff.feed(vals)
 
+        d = diff.feed(vals)
+        d['unix_time'] = int(time.time())
         if csv_file:
             csv_writer.writerow(d)
+
         if no_gui:
             continue
         lines = []
