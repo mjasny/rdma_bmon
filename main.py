@@ -10,7 +10,11 @@ import math
 import re
 import argparse
 import csv
+import signal
 
+
+def exit_gracefully(signum, frame):
+    sys.exit(0)
 
 class CounterReader:
     def __init__(self, *paths):
@@ -81,8 +85,8 @@ def main(nic, port, interval, csv_file, no_gui):
     box = ['┏', '┓', '┗', '┛', '┃', '━', '┳', '┻', '┣', '╋', '┫']
     block = [' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']
 
-    cols, rows = os.get_terminal_size()
     if not no_gui:
+        cols, rows = os.get_terminal_size()
         sys.stdout.write('\033[?25l')  # hide cursor
         sys.stdout.flush()
 
@@ -94,10 +98,10 @@ def main(nic, port, interval, csv_file, no_gui):
     if not no_gui:
         sys.stdout.write('\033[2J')  # clear and move to 0 0
         sys.stdout.flush()
+        queue = deque(maxlen=cols//2-1)
 
     diff = Diff('unix_time','port_rcv_data', 'port_xmit_data',
                 'port_rcv_packets', 'port_xmit_packets')
-    queue = deque(maxlen=cols//2-1)
 
     RED = '\033[31m'
     GREEN = '\033[32m'
@@ -120,7 +124,7 @@ def main(nic, port, interval, csv_file, no_gui):
         vals = {k: v * (1/interval) for k, v in vals.items()}
 
         d = diff.feed(vals)
-        d['unix_time'] = int(time.time())
+        d['unix_time'] = int(time.time()*1000) #milliseconds
         if csv_file:
             csv_writer.writerow(d)
 
@@ -216,6 +220,7 @@ def main(nic, port, interval, csv_file, no_gui):
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, exit_gracefully)
     parser = argparse.ArgumentParser(description='RDMA Bandwidth Monitor')
     parser.add_argument('nic', type=str, default='mlx5_0',
                         help='NIC to monitor')
