@@ -14,6 +14,7 @@ import signal
 
 
 def exit_gracefully(signum, frame):
+    signal.signal(signal.SIGINT, original_sigint)
     sys.exit(0)
 
 class CounterReader:
@@ -220,7 +221,9 @@ def main(nic, port, interval, csv_file, no_gui):
 
 
 if __name__ == '__main__':
+    original_sigint = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, exit_gracefully)
+    
     parser = argparse.ArgumentParser(description='RDMA Bandwidth Monitor')
     parser.add_argument('nic', type=str, default='mlx5_0',
                         help='NIC to monitor')
